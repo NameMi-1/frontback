@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Learning App</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">\
+    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-firestore-compat.js"></script>
+    <style>
+        /* ✅ Always hide reset timer button */
+        .Reset-timer {
+          display: none !important;
+        }
+      
+        /* สไตล์พื้นฐาน */
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      
+        @keyframes slideInLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+      
+        @keyframes zoomIn {
+          from {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+      
+        #welcome-message {
+          animation: fadeInUp 1s ease-in-out;
+          font-size: 1.5rem;
+          font-weight: 500;
+          text-align: center;
+          margin: 40px auto;
+        }
+      
+        .dashboard-card {
+          background: linear-gradient(135deg, #3B82F6, #1E40AF);
+          color: white;
+          padding: 30px;
+          border-radius: 15px;
+          text-align: center;
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+          transition: transform 0.3s ease;
+        }
+      
+        .dashboard-card:nth-child(1) {
+          animation-delay: 0.3s;
+        }
+      
+        .dashboard-card:nth-child(2) {
+          animation-delay: 0.6s;
+        }
+      
+        .dashboard-card:nth-child(3) {
+          animation-delay: 0.9s;
+        }
+      
+        body {
+          font-family: 'Poppins', sans-serif;
+          width: 100%;
+          height: 100%;
+          margin: 0;
+          padding: 0;
+          overflow-x: hidden;
+        }
+      
+        .app-container {
+          display: flex;
+          flex-direction: row;
+          height: 100vh;
+          overflow: auto;
+        }
+      
+        .sidebar {
+          background-color: #333;
+          color: white;
+          width: 250px;
+          height: 100%;
+          padding: 20px;
+          position: fixed;
+        }
+      
+        .sidebar nav ul {
+          list-style: none;
+          padding: 0;
+        }
+      
+        .sidebar nav ul li {
+          margin-bottom: 20px;
+        }
+      
+        .sidebar nav ul li a {
+          text-decoration: none;
+          color: white;
+          font-size: 1rem;
+          padding: 10px 15px;
+          display: block;
+          border-radius: 5px;
+          transition: background-color 0.3s;
+        }
+      
+        .sidebar nav ul li a:hover {
+          background-color: #3B82F6;
+        }
+      
+        .main-content {
+          flex-grow: 1;
+          padding: 20px;
+          margin-left: 250px;
+        }
+      
+        .page {
+          display: none;
+        }
+      
+        .page.active {
+          display: block;
+        }
+      
+        /* สไตล์สำหรับอุปกรณ์มือถือ */
+        @media (max-width: 768px) {
+          .app-container {
+            flex-direction: column;
+            align-items: center;
+          }
+      
+          .sidebar {
+            position: static;
+            width: 100%;
+            height: auto;
+            padding: 10px;
+            text-align: center;
+          }
+      
+          .main-content {
+            margin-left: 0;
+            width: 100%;
+            justify-content: center;
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+          }
+      
+          .dashboard-card,
+          .lesson-card {
+            width: 90%;
+            max-width: 300px;
+          }
+        }
+      </style>      
+</head>
+
+<body>
+    <div class="app-container">
+      <aside class="sidebar">
+        <nav>
+          <ul>
+            <li><a href="{{ url_for('home') }}">
+              <img src="/static/icons/dashboard.svg" width="20" style="margin-right: 10px;"> Dashboard</a>
+            </li>
+            <li><a href="{{ url_for('user') }}">
+              <img src="/static/icons/user.svg" width="20" style="margin-right: 10px;"> User</a>
+            </li>
+            <li><a href="{{ url_for('settings') }}">
+              <img src="/static/icons/settings.svg" width="20" style="margin-right: 10px;"> Settings</a>
+            </li>
+            <li>
+              <a href="{{ url_for('speech_test') }}" style="display: flex; align-items: center;">
+                <img src="/static/icons/mic.svg" width="24" height="24" style="margin-right: 12px;"> 
+                <span>Speech Test</span>
+              </a>
+            </li>            
+            <li>
+              <a href="{{ url_for('learn') }}" class="{% if current_page == 'learn' %}active{% endif %}">
+                <img src="/static/icons/book.svg" width="20" style="margin-right: 10px;"> Learn
+              </a>
+            </li>
+            <li id="admin-link" style="display: none;">
+              <a href="/admin">
+                <img src="/static/icons/shield.svg" width="20" style="margin-right: 10px;"> Admin
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+      
+      <div class="main-content">
+        <div id="dashboard" class="page active">
+          <header></header>
+          <section>
+            <div style="display: flex; justify-content: center; align-items: center; height: 120px;">
+              <h2 id="welcome-message">Welcome back!</h2>
+            </div>
+            <div class="dashboard-cards">
+              <div class="dashboard-card">
+                <h3>📚 Lessons Completed</h3>
+                <li>Lesson 1 <span id="lesson1-status">⏳</span></li>
+                <li>Lesson 2 <span id="lesson2-status">⏳</span></li>
+                <li>Lesson 3 <span id="lesson3-status">⏳</span></li>
+                <li>Lesson 4 <span id="lesson4-status">⏳</span></li>
+                <li>Lesson 5 <span id="lesson5-status">⏳</span></li>
+              </div>
+              <div class="dashboard-card">
+                <h3>📊 Your Overall Accuracy: <span id="user-accuracy">0.00%</span></h3>
+              </div>
+              <div class="dashboard-card">
+                <h3>🔥 Current Streak</h3>
+                <span id="timer">00 วัน 00:00:00</span>
+              </div>
+              <div class="dashboard-card">
+                <h3>🏆 Your Score: <span id="user-score">0</span></h3>
+              </div>
+              <div class="dashboard-card">
+                <h3>🎯 Your Level: <span id="user-level">Basic/Beginner</span></h3>
+              </div>
+            </div>
+          </section>
+        </div>
+  
+        <!-- Still present for logic, visually hidden -->
+        <button class="Reset-timer">รีเซ็ตเวลา</button>
+  
+        <div id="home" class="page">
+          <header><h1>Learning English</h1></header>
+          <section>
+            <h2 id="welcome-message">Welcome back!</h2>
+            <div class="lesson-section">
+              <div class="lesson-card"><h3>Lesson 1</h3><p>Basic Vocabulary</p><button>Start</button></div>
+              <div class="lesson-card"><h3>Lesson 2</h3><p>Common Phrases</p><button>Start</button></div>
+              <div class="lesson-card"><h3>Lesson 3</h3><p>Grammar Rules</p><button>Start</button></div>
+              <div class="lesson-card"><h3>Lesson 4</h3><p>Pronunciation</p><button>Start</button></div>
+            </div>
+          </section>
+          <footer><button class="speech-btn" id="speech-btn" onclick="goToTestPage()">Speech</button></footer>
+        </div>
+  
+        <div id="settings" class="page">
+          <header><h1>Settings</h1></header>
+          <section>
+            <h2>Language Preferences</h2>
+            <form>
+              <label><input type="radio" name="language" value="en" checked> English</label>
+              <label><input type="radio" name="language" value="th"> Thai</label>
+            </form>
+          </section>
+        </div>
+      </div>
+    </div>
+<script>
+    let startTime;
+    let timerInterval;
+
+    function updateTimer() {
+      const now = new Date();
+      const elapsedSeconds = Math.floor((now - startTime) / 1000);
+      const days = Math.floor(elapsedSeconds / (24 * 3600));
+      const hours = Math.floor((elapsedSeconds % (24 * 3600)) / 3600);
+      const minutes = Math.floor((elapsedSeconds % 3600) / 60);
+      const seconds = elapsedSeconds % 60;
+      document.getElementById('timer').textContent =
+        (days < 10 ? '0' + days : days) + " วัน " +
+        (hours < 10 ? '0' + hours : hours) + ':' +
+        (minutes < 10 ? '0' + minutes : minutes) + ':' +
+        (seconds < 10 ? '0' + seconds : seconds);
+    }
+
+    // อ่านค่า startTime จาก localStorage เมื่อโหลดหน้า timer.html
+    if (localStorage.getItem('startTime')) {
+      startTime = new Date(localStorage.getItem('startTime'));
+      timerInterval = setInterval(updateTimer, 1000);
+    } else {
+      document.getElementById('timer').textContent = 'ยังไม่ได้เริ่มทำแบบทดสอบ';
+    }
+
+    // ฟังก์ชันรีเซ็ตเวลา: ลบค่า startTime ใน localStorage แล้วรีเฟรชหน้า
+    document.querySelector('.Reset-timer').addEventListener('click', function() {
+      clearInterval(timerInterval);
+      localStorage.removeItem('startTime');
+      alert('รีเซ็ตเวลาแล้ว');
+      location.reload();
+    });
+    // ✅ Firebase Configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyDX18_aJbcVXz3xcrQtxAL1WNcm7BO2U1k",
+        authDomain: "english-app-2ede3.firebaseapp.com",
+        projectId: "english-app-2ede3",
+        storageBucket: "english-app-2ede3.firebasestorage.app",
+        messagingSenderId: "46267452346",
+        appId: "1:46267452346:web:81fb68d5836e0532c4ab83",
+        measurementId: "G-Y9KXDJ6NFD"
+    };
+
+    // ✅ Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();  // ✅ Make sure this line is present!
+
+    // ✅ Function to get time-based motivational message
+    function getMotivationalMessage() {
+        const hours = new Date().getHours();
+        if (hours < 12) {
+            return "🌞 Good morning! Ready to improve your pronunciation?";
+        } else if (hours < 18) {
+            return "🌅 Good afternoon! Keep up the great work!";
+        } else {
+            return "🌙 Good evening! Don't forget to practice before bed!";
+        }
+    }
+
+    // ✅ Function to update welcome message
+    function updateWelcomeMessage() {
+    console.log("✅ Running updateWelcomeMessage()...");
+
+    const motivationalMessage = getMotivationalMessage();
+    console.log("Motivational Message:", motivationalMessage);
+
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            console.log("✅ User detected:", user);
+            document.getElementById("welcome-message").innerText = `${motivationalMessage} ${user.displayName || "User"}!`;
+        } else {
+            console.warn("🚫 No user logged in.");
+        }
+    });
+}
+
+// ✅ Run the function on page load
+document.addEventListener("DOMContentLoaded", updateWelcomeMessage);
+
+
+    // ✅ Load Points & Level from Firebase
+    document.addEventListener("DOMContentLoaded", function () {
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                let userRef = db.collection("users").doc(user.uid);
+                userRef.get().then((doc) => {
+                    if (doc.exists) {
+                        let userData = doc.data();
+                        document.getElementById("user-points").textContent = userData.points || 0;
+                        document.getElementById("user-level").textContent = userData.level || "Basic/Beginner";
+                    }
+                });
+            }
+        });
+    });
+
+    function updateUserDashboard() {
+    auth.onAuthStateChanged(async (user) => {
+        if (!user) {
+            console.warn("🚫 No user is logged in.");
+            return;
+        }
+
+        console.log("✅ Logged-in User ID:", user.uid);
+
+        try {
+            const userRef = db.collection("users").doc(user.uid);
+            const doc = await userRef.get();
+
+            if (!doc.exists) {
+                console.error("❌ No user document found in Firestore.");
+                return;
+            }
+
+            let data = doc.data();
+            console.log("✅ Firestore User Data:", data);
+
+            // ✅ Update Dashboard UI
+            let welcomeElement = document.getElementById("welcome-message");
+            if (welcomeElement) {
+                welcomeElement.innerText = `Welcome, ${data.fullName || "User"}!`;
+            } else {
+                console.warn("⚠️ Warning: #welcome-message element not found.");
+            }
+
+            document.getElementById("user-score").textContent = data.score || "0.00";
+            if (data.isCompleted) {
+                document.getElementById("user-level").textContent = "🎓 All Levels Completed";
+            } else {
+              const levelDisplay = document.getElementById("user-level");
+              if (levelDisplay) {
+                  if (data.isCompleted === true) {
+                      levelDisplay.textContent = "🎓 All Levels Completed";
+                  } else if (typeof data.currentLevel === "number") {
+                      const levels = ["Basic/Beginner", "Intermediate Low", "Intermediate High", "Advanced", "Native/Fluent"];
+                      levelDisplay.textContent = levels[data.currentLevel] || data.level || "Unknown";
+                  } else {
+                      levelDisplay.textContent = data.currentLevel || "Unknown";
+                  }
+              }
+            }
+            document.getElementById("user-accuracy").textContent = data.overallAccuracy ? `${data.overallAccuracy}%` : "0.00%";
+
+        } catch (error) {
+            console.error("❌ Error fetching user data:", error);
+        }
+    });
+}
+
+    auth.onAuthStateChanged(user => {
+    if (user) {
+        const userRef = db.collection("users").doc(user.uid);
+
+        userRef.get().then((doc) => {
+            let data = doc.exists ? doc.data() : {};
+            let lastLogin = data.lastLogin ? new Date(data.lastLogin) : null;
+            let streak = data.streak || 0;
+            let today = new Date();
+            today.setHours(0, 0, 0, 0); // Normalize time
+
+            if (lastLogin) {
+                let difference = (today - lastLogin) / (1000 * 60 * 60 * 24); // Difference in days
+
+                if (difference === 1) {
+                    streak++; // Continue streak
+                } else if (difference > 1) {
+                    streak = 1; // Reset streak if missed a day
+                }
+            } else {
+                streak = 1; // First login
+            }
+
+            // ✅ Update the streak and last login date in Firestore
+            userRef.set({
+                lastLogin: today.toISOString(),
+                streak: streak
+            }, { merge: true })
+            .then(() => console.log(`✅ Streak updated: ${streak} days`))
+            .catch(error => console.error("❌ Error updating streak:", error));
+        });
+    } else {
+        console.error("❌ No user logged in.");
+    }
+});
+
+
+function loadUserStats(userId) {
+    if (!userId) {
+        console.error("❌ Error: User ID is undefined.");
+        return;
+    }
+
+    const userRef = db.collection("users").doc(userId);
+
+    userRef.get()
+        .then((doc) => {
+            if (doc.exists) {
+                let data = doc.data();
+                console.log("✅ User Data:", JSON.stringify(data));
+
+                let streakElement = document.getElementById("user-streak");
+                let scoreElement = document.getElementById("user-score");
+                let levelElement = document.getElementById("user-level");
+
+                if (streakElement) {
+                    streakElement.textContent = data.streak || "0"; // Default to 0
+                } else {
+                    console.warn("⚠️ Warning: #user-streak element not found.");
+                }
+
+                if (scoreElement) {
+                    scoreElement.textContent = data.score || "0.00";
+                } else {
+                    console.warn("⚠️ Warning: #user-score element not found.");
+                }
+                if (levelElement) {
+                  levelElement.textContent = data.isCompleted ? "🎓 All Levels Completed" : (data.level || "Unknown");
+                } 
+                else {
+                    console.warn("⚠️ Warning: #user-level element not found.");
+                }
+            } else {
+                console.log("❌ No user data found.");
+            }
+        })
+        .catch(error => console.error("❌ Error fetching user data:", error));
+}
+
+// ✅ Load user data on dashboard
+document.addEventListener("DOMContentLoaded", loadUserStats);
+
+document.addEventListener("DOMContentLoaded", function () {
+    if (typeof getTestScore !== "function") {
+        console.error("❌ Error: getTestScore is not defined. Ensure the script is loaded.");
+        return;
+    }
+
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            const userId = user.uid;
+            console.log("✅ Logged-in User ID:", userId);
+
+            if (document.getElementById("user-score") && document.getElementById("user-level") && document.getElementById("user-accuracy")) {
+                getTestScore(userId);
+            } else {
+                console.warn("⚠️ Warning: One or more dashboard elements are missing.");
+            }
+        } else {
+            console.error("❌ No user logged in.");
+        }
+    });
+});
+
+function getTestScore(userId) {
+    if (!userId) {
+        console.error("❌ Error: User ID is undefined.");
+        return;
+    }
+
+    const userRef = db.collection("users").doc(userId);
+    userRef.get()
+        .then((doc) => {
+            if (doc.exists) {
+                let data = doc.data();
+                console.log(`✅ User Data:`, data);
+
+                let scoreElement = document.getElementById("user-score");
+                let levelElement = document.getElementById("user-level");
+                let accuracyElement = document.getElementById("user-accuracy");
+
+                if (scoreElement) {
+                    scoreElement.textContent = data.score || "0.00";
+                } else {
+                    console.warn("⚠️ Warning: #user-score element not found.");
+                }
+
+                if (levelElement) {
+                    if (data.isCompleted === true) {
+                        levelElement.textContent = "🎓 All Levels Completed";
+                    } else if (typeof data.currentLevel === "number") {
+                        const levels = [
+                            "Basic/Beginner",
+                            "Intermediate Low",
+                            "Intermediate High",
+                            "Advanced",
+                            "Native/Fluent"
+                        ];
+                        levelElement.textContent = levels[data.currentLevel] || "Unknown";
+                    } else {
+                        levelElement.textContent = "Unknown";
+                    }
+                } else {
+                    console.warn("⚠️ Warning: #user-level element not found.");
+                }
+
+                if (accuracyElement) {
+                    accuracyElement.textContent = data.overallAccuracy ? `${data.overallAccuracy}%` : "0.00%";
+                } else {
+                    console.warn("⚠️ Warning: #user-accuracy element not found.");
+                }
+            } else {
+                console.log("❌ No test score found.");
+            }
+        })
+        .catch(error => console.error("❌ Error fetching score:", error));
+}
+
+// ✅ Ensure Admin Sidebar Link is Visible for Admin Users
+function showAdminLink() {
+    auth.onAuthStateChanged(async (user) => {
+        if (!user) {
+            console.warn("🚫 No user is logged in.");
+            return;
+        }
+
+        console.log("✅ Logged-in User ID:", user.uid);
+
+        try {
+            const userRef = db.collection("users").doc(user.uid);
+            const doc = await userRef.get();
+
+            if (!doc.exists) {
+                console.error("❌ No user document found in Firestore.");
+                return;
+            }
+
+            const userData = doc.data();
+            console.log("✅ User Data from Firestore:", userData);
+
+            if (userData.isAdmin === true) {
+                const adminLink = document.getElementById("admin-link");
+
+                if (adminLink) {
+                    adminLink.style.display = "block";
+                    console.log("✅ Admin link is now visible.");
+                } else {
+                    console.warn("⚠️ Warning: #admin-link element not found in HTML.");
+                }
+            } else {
+                console.warn("🚫 User is not an admin.");
+            }
+        } catch (error) {
+            console.error("❌ Error checking admin status:", error);
+        }
+    });
+}
+
+firebase.auth().onAuthStateChanged(user => {
+  if (user) {
+    firebase.firestore().collection("users").doc(user.uid).get().then(doc => {
+      const data = doc.data();
+      for (let i = 1; i <= 5; i++) {
+        if (data.lessons && data.lessons[`lesson${i}`]) {
+          document.getElementById(`lesson${i}-status`).textContent = "✅ Completed";
+        } else {
+          document.getElementById(`lesson${i}-status`).textContent = "⏳ Not Started";
+        }
+      }
+    });
+  } else {
+    for (let i = 1; i <= 5; i++) {
+      if (localStorage.getItem(`lesson${i}_complete`) === "true") {
+        document.getElementById(`lesson${i}-status`).textContent = "✅ Completed (Guest)";
+      }
+    }
+  }
+});
+
+// ✅ Run function on page load
+document.addEventListener("DOMContentLoaded", showAdminLink);
+
+</script>
