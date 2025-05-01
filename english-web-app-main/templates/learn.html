@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Learn</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background-color: #f7f7f7;
+    }
+
+    .app-container {
+      display: flex;
+      height: 100%;
+    }
+
+    .sidebar {
+      width: 250px;
+      background-color: #333;
+      color: white;
+      padding: 20px;
+      box-sizing: border-box;
+      position: fixed;
+      height: 100vh;
+      top: 0;
+      left: 0;
+    }
+
+    .sidebar nav ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .sidebar nav ul li {
+      margin-bottom: 20px;
+    }
+
+    .sidebar nav ul li a {
+      color: white;
+      text-decoration: none;
+      font-size: 1rem;
+      padding: 10px 15px;
+      display: block;
+      border-radius: 5px;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+
+    .sidebar nav ul li a:hover,
+    .sidebar nav ul li a.active {
+      background-color: #3B82F6;
+      transform: translateX(5px);
+    }
+
+    .main-content {
+      margin-left: 250px;
+      padding: 40px 20px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-sizing: border-box;
+    }
+
+    .tabs {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      margin: 0 10px;
+      background-color: #eee;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .tab.active {
+      background-color: #3B82F6;
+      color: white;
+    }
+
+    .tab-content {
+      display: none;
+      width: 100%;
+      max-width: 1000px;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .lesson-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 10px;
+    }
+
+    .lesson-card {
+      background-color: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      text-align: center;
+      transition: 0.3s;
+    }
+
+    .lesson-card:hover {
+      transform: translateY(-3px);
+    }
+
+    .lesson-card input {
+      margin-top: 10px;
+      padding: 8px;
+      width: 90%;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    .lesson-card button {
+      margin-top: 10px;
+      background-color: #3B82F6;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="app-container">
+      <aside class="sidebar">
+        <nav>
+          <ul>
+            <li><a href="{{ url_for('home') }}">
+              <img src="/static/icons/dashboard.svg" width="20" style="margin-right: 10px;"> Dashboard</a>
+            </li>
+            <li><a href="{{ url_for('user') }}">
+              <img src="/static/icons/user.svg" width="20" style="margin-right: 10px;"> User</a>
+            </li>
+            <li><a href="{{ url_for('settings') }}">
+              <img src="/static/icons/settings.svg" width="20" style="margin-right: 10px;"> Settings</a>
+            </li>
+            <li>
+              <a href="{{ url_for('speech_test') }}" style="display: flex; align-items: center;">
+                <img src="/static/icons/mic.svg" width="24" height="24" style="margin-right: 12px;"> 
+                <span>Speech Test</span>
+              </a>
+            </li>            
+            <li>
+              <a href="{{ url_for('learn') }}" class="{% if current_page == 'learn' %}active{% endif %}">
+                <img src="/static/icons/book.svg" width="20" style="margin-right: 10px;"> Learn
+              </a>
+            </li>
+            <li id="admin-link" style="display: none;">
+              <a href="/admin">
+                <img src="/static/icons/shield.svg" width="20" style="margin-right: 10px;"> Admin
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('lessons')">📘 Lessons</div>
+        <div class="tab" onclick="switchTab('practice')">🗣️ Practice</div>
+      </div>
+
+      <!-- Lessons -->
+      <div id="lessons" class="tab-content active">
+        <div class="lesson-grid">
+          <div class="lesson-card">
+            <h3>Lesson 1: Vowel Sounds</h3>
+            <p>Learn how to pronounce short and long vowels correctly.</p>
+            <a href="{{ url_for('lesson1') }}"><button>Start</button></a>
+          </div>
+          <div class="lesson-card">
+            <h3>Lesson 2: TH vs S</h3>
+            <p>Practice distinguishing between TH and S sounds.</p>
+            <a href="{{ url_for('lesson2') }}"><button>Start</button></a>
+          </div>
+          <div class="lesson-card">
+            <h3>Lesson 3: R vs L</h3>
+            <p>Refine your pronunciation of R and L sounds.</p>
+            <a href="{{ url_for('lesson3') }}"><button>Start</button></a>
+          </div>
+          <div class="lesson-card">
+            <h3>Lesson 4: Ending Sounds</h3>
+            <p>Improve how you finish words like "cat", "walk", and "help".</p>
+            <a href="{{ url_for('lesson4') }}"><button>Start</button></a>
+          </div>
+          <div class="lesson-card">
+            <h3>Lesson 5: Silent Letters</h3>
+            <p>Learn how to pronounce words with silent letters like “knife” and “honest”.</p>
+            <a href="{{ url_for('lesson5') }}"><button>Start</button></a>
+          </div>
+        </div>
+      </div>
+
+<!-- Practice Section -->
+<div id="practice" class="tab-content">
+  <div class="lesson-grid">
+
+    <!-- ✅ Daily Challenge -->
+    <div class="lesson-card">
+      <h3>Daily Pronunciation Challenge</h3>
+      <p>Try saying today’s sentence and get real-time feedback!</p>
+      <div id="dailySentence">"Practice makes perfect."</div>
+      <br>
+      <button onclick="playDailySentence()">🔊 Hear Native</button>
+      <button onclick="speakDailySentence()">🎤 Speak</button>
+      <p id="daily-feedback" style="margin-top: 10px;"></p>
+      <p id="daily-listening" style="color: #3B82F6; font-weight: 600;"></p>
+      <p id="daily-spoken-text" style="font-style: italic; color: #666;"></p>
+      <audio id="dailyAudio" hidden></audio>
+    </div>
+
+    <!-- ✅ Custom Sentence Practice -->
+    <div class="lesson-card">
+      <h3>Custom Sentence Practice</h3>
+      <p>Enter your own sentence and check your pronunciation.</p>
+      <input type="text" id="customSentence" placeholder="Type your sentence here">
+      <br><br>
+      <button onclick="playNativePractice()">🔊 Hear Native</button>
+      <button onclick="startPracticeSpeech()">🎤 Speak</button>
+      <p id="practice-feedback" style="margin-top: 10px;"></p>
+      <p id="listening-indicator" style="color: #3B82F6; font-weight: 600;"></p>
+      <p id="custom-spoken-text" style="font-style: italic; color: #666;"></p>
+      <audio id="nativePracticeAudio" hidden></audio>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // 🌟 Switch Tabs
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  // 📅 Daily Sentence (1 per day)
+  const dailySentences = [
+    "Practice makes perfect.",
+    "Never stop learning.",
+    "Consistency is the key to success.",
+    "Speaking clearly boosts confidence."
+  ];
+
+  function getTodayKey() {
+    return new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  }
+
+  function getDailySentence() {
+    const storedDate = localStorage.getItem("daily-date");
+    const today = getTodayKey();
+
+    if (storedDate === today && localStorage.getItem("daily-sentence")) {
+      return localStorage.getItem("daily-sentence");
+    }
+
+    const random = dailySentences[Math.floor(Math.random() * dailySentences.length)];
+    localStorage.setItem("daily-date", today);
+    localStorage.setItem("daily-sentence", random);
+    return random;
+  }
+
+  const todaySentence = getDailySentence();
+  document.getElementById("dailySentence").innerText = `"${todaySentence}"`;
+
+  // 🔊 Play Native Audio (Daily)
+  function playDailySentence() {
+    fetch(`/get_native_audio?text=${encodeURIComponent(todaySentence)}`)
+      .then(res => res.blob())
+      .then(blob => {
+        const audio = document.getElementById("dailyAudio");
+        audio.src = URL.createObjectURL(blob);
+        audio.play();
+      });
+  }
+
+  // 🎤 Speak (Daily)
+  function speakDailySentence() {
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = "en-US";
+
+    const indicator = document.getElementById("daily-listening");
+    indicator.innerText = "🎤 Listening...";
+
+    recognition.onresult = function (event) {
+      indicator.innerText = "";
+      const spoken = event.results[0][0].transcript;
+
+      document.getElementById("daily-spoken-text").innerText = `🗣️ You said: "${spoken}"`;
+
+      fetch('/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          target_sentence: todaySentence,
+          user_speech: spoken,
+          strictness: 'medium'
+        })
+      })
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById("daily-feedback").innerText = `✅ Accuracy: ${data.accuracy.toFixed(2)}%`;
+        })
+        .catch(err => {
+          document.getElementById("daily-feedback").innerText = "❌ Error analyzing speech.";
+          console.error(err);
+        });
+    };
+
+    recognition.onerror = () => indicator.innerText = "";
+    recognition.onend = () => indicator.innerText = "";
+
+    recognition.start();
+  }
+
+  // 🔊 Native Playback for Custom Sentence
+  function playNativePractice() {
+    const text = document.getElementById("customSentence").value.trim();
+    if (!text) return alert("❌ Please enter a sentence first.");
+
+    fetch(`/get_native_audio?text=${encodeURIComponent(text)}`)
+      .then(res => res.blob())
+      .then(blob => {
+        const audio = document.getElementById("nativePracticeAudio");
+        audio.src = URL.createObjectURL(blob);
+        audio.play();
+      });
+  }
+
+  // 🎤 Speak (Custom)
+  function startPracticeSpeech() {
+    const text = document.getElementById("customSentence").value.trim();
+    if (!text) return alert("❌ Please enter a sentence first.");
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) return alert("Speech recognition not supported.");
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+
+    const indicator = document.getElementById("listening-indicator");
+    indicator.innerText = "🎤 Listening...";
+
+    recognition.onresult = (event) => {
+      indicator.innerText = "";
+      const userSpeech = event.results[0][0].transcript;
+
+      document.getElementById("custom-spoken-text").innerText = `🗣️ You said: "${userSpeech}"`;
+
+      fetch('/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          target_sentence: text,
+          user_speech: userSpeech,
+          strictness: 'medium'
+        })
+      })
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById("practice-feedback").innerText = `✅ Accuracy: ${data.accuracy.toFixed(2)}%`;
+        })
+        .catch(err => {
+          console.error(err);
+          document.getElementById("practice-feedback").innerText = "❌ Error analyzing speech.";
+        });
+    };
+
+    recognition.onerror = () => indicator.innerText = "";
+    recognition.onend = () => indicator.innerText = "";
+
+    recognition.start();
+  }
+</script>

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+    <style>
+        body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 2rem;
+    background-color: #f9f9f9;
+    color: #333;
+}
+
+h1, h2 {
+    color: #222;
+}
+
+a {
+    text-decoration: none;
+    color: #4a90e2;
+    font-weight: bold;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    background-color: white;
+    box-shadow: 0 0 10px rgba(0,0,0,0.05);
+}
+
+th, td {
+    padding: 0.75rem 1rem;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+}
+
+tr:hover {
+    background-color: #f9f9f9;
+}
+
+button {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 5px;
+    margin: 2px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+button:first-child {
+    background-color: #4caf50;
+    color: white;
+}
+
+button:last-child {
+    background-color: #5f3332;
+    color: white;
+}
+
+select {
+    padding: 4px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+#admin-dashboard {
+    max-width: 1000px;
+    margin: auto;
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+#loading-message {
+    text-align: center;
+    padding: 3rem;
+    font-size: 1.5rem;
+}
+
+canvas {
+    margin-top: 2rem;
+    max-width: 100%;
+}
+.overview-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding: 1rem;
+    background-color: #f0f4f8;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.stat-card {
+    flex: 1 1 220px;
+    background: #ffffff;
+    border-left: 5px solid #4a90e2;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.03);
+    transition: all 0.2s ease-in-out;
+}
+
+.stat-card:hover {
+    transform: scale(1.02);
+}
+
+.stat-card h3 {
+    margin-top: 0;
+    font-size: 1.1rem;
+    color: #444;
+}
+
+.stat-card p {
+    font-size: 1.4rem;
+    font-weight: bold;
+    margin: 0.5rem 0 0;
+    color: #111;
+}
+.section-title {
+    font-size: 1.5rem;
+    color: #222;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 0.5rem;
+}
+    </style>
+
+<body>
+    <div id="overviewStats" class="overview-container"></div>
+
+    <h1 id="loading-message">Loading...</h1> <!-- Shows while checking admin status -->
+
+    <div id="admin-dashboard" style="display: none;">
+        <h1>Admin Dashboard</h1>
+        <a href="/">Go to Dashboard</a>
+
+        <h2>Registered Users</h2>
+        <!-- 🔍 Search & Filter -->
+<input type="text" id="searchInput" placeholder="Search by name or email..." style="margin-bottom: 1rem; padding: 8px; width: 100%; max-width: 400px;">
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Accuracy (%)</th>
+                    <th>Streak</th>
+                    <th>Gender</th>
+                    <th>Nationality</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="user-table"></tbody>
+        </table>
+
+    <!-- Pronunciation Accuracy Overview -->
+    <h2 style="margin-top: 2rem;">📈 User Engagement & Performance Overview</h2>
+   
+
+    <script>
+        // ✅ Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDX18_aJbcVXz3xcrQtxAL1WNcm7BO2U1k",
+            authDomain: "english-app-2ede3.firebaseapp.com",
+            projectId: "english-app-2ede3",
+            storageBucket: "english-app-2ede3.appspot.com",
+            messagingSenderId: "46267452346",
+            appId: "1:46267452346:web:81fb68d5836e0532c4ab83",
+            measurementId: "G-Y9KXDJ6NFD"
+        };
+
+        // ✅ Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // ✅ Check if the user is an admin
+        function checkAdmin() {
+        auth.onAuthStateChanged(user => {
+        if (!user) {
+            console.warn("🚫 No user is logged in.");
+            alert("Access Denied! You are not logged in.");
+            window.location.href = "/login"; // Redirect to login page
+            return;
+        }
+
+        console.log("✅ Logged-in User ID:", user.uid);
+
+        const userRef = db.collection("users").doc(user.uid);
+        
+        userRef.get().then(doc => {
+            if (!doc.exists) {
+                console.error("❌ No user document found in Firestore.");
+                alert("Access Denied! User record not found.");
+                window.location.href = "/";
+                return;
+            }
+
+            let userData = doc.data();
+            console.log("✅ Firestore User Data:", userData);
+
+            console.log("🔍 isAdmin Value:", userData.isAdmin, typeof userData.isAdmin);
+
+            if (userData.isAdmin === true) {
+                console.log("✅ Admin Access Granted");
+
+                let adminDashboard = document.getElementById("admin-dashboard");
+                if (adminDashboard) {
+                    adminDashboard.style.display = "block"; // ✅ Show admin panel
+                } else {
+                    console.warn("⚠️ Warning: #admin-dashboard element not found.");
+                }
+
+                // Hide loading message
+                let loadingMessage = document.getElementById("loading-message");
+                if (loadingMessage) {
+                    loadingMessage.style.display = "none";
+                }
+
+            } else {
+                alert("Access Denied! You are not an admin.");
+                window.location.href = "/";
+            }
+        }).catch(error => {
+            console.error("❌ Error checking admin status:", error);
+        });
+    });
+}
+
+        // ✅ Fetch users from Firestore and display them in the table
+        function loadUsers() {
+    const searchInput = document.getElementById("searchInput");
+    const userTable = document.getElementById("user-table");
+    let allUsers = [];
+
+    db.collection("users").get().then((querySnapshot) => {
+        allUsers = querySnapshot.docs.map((doc) => {
+            return { id: doc.id, ...doc.data() };
+        });
+
+        renderTable(allUsers);
+        renderChart(allUsers);
+
+        // 🔍 Search filter
+        searchInput.addEventListener("input", () => {
+            const keyword = searchInput.value.toLowerCase();
+            const filtered = allUsers.filter(u =>
+                (u.fullName || "").toLowerCase().includes(keyword) ||
+                (u.email || "").toLowerCase().includes(keyword)
+            );
+            renderTable(filtered);
+            renderChart(filtered);
+        });
+    });
+
+    function renderTable(users) {
+        userTable.innerHTML = "";
+        users.forEach((data) => {
+            const row = `
+            <tr>
+                <td contenteditable="true" id="name-${data.id}">${data.fullName || "N/A"}</td>
+                <td>${data.email || "N/A"}</td>
+                <td contenteditable="true" id="accuracy-${data.id}">${data.overallAccuracy || "0.00"}</td>
+                <td contenteditable="true" id="streak-${data.id}">${data.streak || "0"}</td>
+                <td>
+                    <select id="gender-${data.id}">
+                        <option value="Male" ${data.gender === "Male" ? "selected" : ""}>Male</option>
+                        <option value="Female" ${data.gender === "Female" ? "selected" : ""}>Female</option>
+                        <option value="Other" ${data.gender === "Other" ? "selected" : ""}>Other</option>
+                    </select>
+                </td>
+                <td contenteditable="true" id="nationality-${data.id}">${data.nationality || "N/A"}</td>
+                <td>
+                    <button onclick="updateUser('${data.id}')">💾 Save</button>
+                    <button onclick="deleteUser('${data.id}')">❌ Remove</button>
+                </td>
+            </tr>`;
+            userTable.innerHTML += row;
+        });
+    }
+
+    function renderChart(users) {
+    const overviewDiv = document.getElementById("overviewStats");
+    if (!overviewDiv) return;
+
+    const accuracies = users.map(u => parseFloat(u.overallAccuracy || 0));
+    const loginCounts = users.map(u => parseInt(u.loginCount || 0));
+    const testsTaken = users.map(u => parseInt(u.testsTaken || 0));
+    const testScores = users.map(u => parseFloat(u.averageTestScore || 0));
+
+    const avg = (arr) => arr.length ? (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(2) : "N/A";
+
+    const avgAccuracy = avg(accuracies);
+    const avgLogins = avg(loginCounts);
+    const avgTests = avg(testsTaken);
+    const avgScore = avg(testScores);
+
+    const summaryHTML = `
+        <div class="stat-card">
+            <h3>📊 Pronunciation Accuracy</h3>
+            <p>${avgAccuracy}%</p>
+        </div>
+        <div class="stat-card">
+            <h3>🔐 Average Logins</h3>
+            <p>${avgLogins}</p>
+        </div>
+        <div class="stat-card">
+            <h3>🧪 Tests Taken</h3>
+            <p>${avgTests}</p>
+        </div>
+        <div class="stat-card">
+            <h3>✅ Avg. Test Score</h3>
+            <p>${avgScore}%</p>
+        </div>
+    `;
+
+    overviewDiv.innerHTML = summaryHTML;
+            }
+  }
+
+
+document.addEventListener("DOMContentLoaded", loadUsers);
+
+        // ✅ Function to delete a user
+        function deleteUser(userId) {
+            if (confirm("Are you sure you want to delete this user?")) {
+                db.collection("users").doc(userId).delete().then(() => {
+                    alert("User deleted successfully!");
+                    loadUsers(); // Refresh the user list
+                }).catch((error) => {
+                    console.error("Error deleting user:", error);
+                });
+            }
+        }
+
+        function updateUser(userId) {
+    let updatedName = document.getElementById(`name-${userId}`).innerText;
+    let updatedAccuracy = parseFloat(document.getElementById(`accuracy-${userId}`).innerText);
+    let updatedStreak = parseInt(document.getElementById(`streak-${userId}`).innerText);
+    let updatedGender = document.getElementById(`gender-${userId}`).value;
+    let updatedNationality = document.getElementById(`nationality-${userId}`).innerText;
+
+    db.collection("users").doc(userId).update({
+        fullName: updatedName,
+        overallAccuracy: updatedAccuracy,
+        streak: updatedStreak,
+        gender: updatedGender,
+        nationality: updatedNationality
+    }).then(() => {
+        alert("✅ User updated successfully!");
+        loadUsers(); // Refresh the user list
+    }).catch((error) => {
+        console.error("❌ Error updating user:", error);
+    });
+}
+
+
+        // ✅ Run the admin check on page load
+        checkAdmin();
+    </script>
+</body>
+</html>
