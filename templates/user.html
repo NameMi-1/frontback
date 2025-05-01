@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <!-- ✅ Load Firebase Before user.js -->
+    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.2/firebase-storage-compat.js"></script>
+
+    <!-- ✅ Ensure this is loaded after Firebase -->
+    <script src="/static/user.js"></script>
+    <link rel="stylesheet" href="/static/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+</head>
+<style>
+    /* ✅ General Styles */
+    body {
+        font-family: 'Poppins', sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f7f7f7;
+    }
+    
+    /* ✅ Layout */
+    .app-container {
+        display: flex;
+        height: 100vh;
+    }
+    
+        .sidebar {
+    background-color: #333;
+    color: white;
+    width: 250px;
+    height: 100vh;
+    padding: 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    box-sizing: border-box;
+    }
+
+    .sidebar nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    }
+
+    .sidebar nav ul li {
+    margin-bottom: 20px;
+    }
+
+    .sidebar nav ul li a {
+    color: white;
+    text-decoration: none;
+    font-size: 1rem;
+    padding: 10px 15px;
+    display: block;
+    border-radius: 5px;
+    transition: background-color 0.3s, transform 0.2s;
+    }
+
+    .sidebar nav ul li a:hover,
+    .sidebar nav ul li a.active {
+    background-color: #3B82F6;
+    transform: translateX(5px);
+    }
+
+    
+    /* ✅ Main Content */
+    .main-content {
+        flex-grow: 1;
+        padding: 40px;
+        margin-left: 250px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+    
+    /* ✅ Profile Card */
+    .profile-card {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        width: 100%;
+        max-width: 450px;
+        animation: fadeIn 1s ease-in-out;
+    }
+
+    /* ✅ User Info Section */
+    .user-info {
+        background: #f0f0f5;
+        padding: 15px;
+        border-radius: 10px;
+        width: 100%;
+        max-width: 400px;
+        margin-bottom: 20px;
+    }
+
+    .user-info h3 {
+        color: #3B82F6;
+        font-size: 18px;
+        margin-bottom: 10px;
+    }
+
+    .user-info p {
+        font-size: 14px;
+        color: #555;
+        font-weight: 500;
+    }
+
+    /* ✅ Update Form */
+    .update-info {
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .update-info h3 {
+        color: #3B82F6;
+        font-size: 18px;
+        margin-bottom: 10px;
+    }
+
+    .update-info input, 
+    .update-info select {
+        width: 90%; /* ✅ Reduce size */
+        max-width: 300px; /* ✅ Limit width */
+        padding: 8px; /* ✅ Reduce padding */
+        font-size: 14px; /* ✅ Reduce font size */
+        border-radius: 6px;
+        margin: 5px 0;
+        border: 1px solid #ccc;
+        transition: all 0.3s ease-in-out;
+    }
+
+    .update-info button {
+        background-color: #3B82F6;
+        color: white;
+        border: none;
+        padding: 10px;
+        font-size: 16px;
+        border-radius: 5px;
+        margin-top: 10px;
+        cursor: pointer;
+        width: 100%;
+    }
+
+    .update-info button:hover {
+        background-color: #1E40AF;
+        transform: scale(1.05);
+    }
+
+    .logout-container {
+    display: flex;
+    justify-content: center; /* Centers horizontally */
+    margin-top: 20px; /* Adds space above */
+    }
+        
+    /* ✅ Buttons */
+    button {
+        background-color: #3B82F6;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        font-size: 16px;
+        border-radius: 5px;
+        margin-top: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    button:hover {
+        background-color: #1E40AF;
+        transform: scale(1.05);
+    }
+    
+    /* ✅ Forms */
+    input {
+        width: 100%;
+        padding: 10px;
+        margin-top: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 1rem;
+    }
+    
+    /* ✅ Animations */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+        .hidden {
+        display: none;
+    }
+
+    #update-info-container {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    </style>
+<body>
+        <!-- Sidebar -->
+        <div class="app-container">
+            <aside class="sidebar">
+              <nav>
+                <ul>
+                  <li><a href="{{ url_for('home') }}">
+                    <img src="/static/icons/dashboard.svg" width="20" style="margin-right: 10px;"> Dashboard</a>
+                  </li>
+                  <li><a href="{{ url_for('user') }}">
+                    <img src="/static/icons/user.svg" width="20" style="margin-right: 10px;"> User</a>
+                  </li>
+                  <li><a href="{{ url_for('settings') }}">
+                    <img src="/static/icons/settings.svg" width="20" style="margin-right: 10px;"> Settings</a>
+                  </li>
+                  <li>
+                    <a href="{{ url_for('speech_test') }}" style="display: flex; align-items: center;">
+                      <img src="/static/icons/mic.svg" width="24" height="24" style="margin-right: 12px;"> 
+                      <span>Speech Test</span>
+                    </a>
+                  </li>            
+                  <li>
+                    <a href="{{ url_for('learn') }}" class="{% if current_page == 'learn' %}active{% endif %}">
+                      <img src="/static/icons/book.svg" width="20" style="margin-right: 10px;"> Learn
+                    </a>
+                  </li>
+                  <li id="admin-link" style="display: none;">
+                    <a href="/admin">
+                      <img src="/static/icons/shield.svg" width="20" style="margin-right: 10px;"> Admin
+                    </a>
+                  </li>
+                </ul>
+              </nav>
+            </aside> 
+
+        <!-- ✅ Main Content -->
+        <div class="main-content">
+            <div class="profile-card">
+                <!-- ✅ Login Form -->
+                <div id="login-form">
+                    <h3>Login</h3>
+                    <input type="email" id="login-email" placeholder="Email" required>
+                    <input type="password" id="login-password" placeholder="Password" required>
+                    <button id="login-btn">Login</button>
+                    <p><a href="forget-password">Forgot Password?</a></p>
+                    <p>Don't have an account? <a href="#" id="show-signup">Create an Account</a></p>
+                </div>
+
+                <!-- ✅ Sign-Up Form (Hidden Initially) -->
+                <div id="signup-form" style="display: none;">
+                    <h3>Create an Account</h3>
+                    <input type="text" id="signup-name" placeholder="Full Name" required>
+                    <input type="email" id="signup-email" placeholder="Email" required>
+                    <input type="password" id="signup-password" placeholder="Password" required>
+                    <button id="signup-btn">Sign Up</button>
+                    <p>Already have an account? <a href="#" id="show-login">Login</a></p>
+                </div>
+
+                <!-- ✅ User Profile (Hidden Initially) -->
+                <div id="user-profile" style="display: none;">
+                    <div class="user-info">
+                        <h3>👤 User Information</h3>
+                        <p><strong>Full Name:</strong> <span id="user-fullname">-</span></p>
+                        <p><strong>Gender:</strong> <span id="user-gender">-</span></p>
+                        <p><strong>Age:</strong> <span id="user-age">-</span></p>
+                        <p><strong>Nationality:</strong> <span id="user-nationality">-</span></p>
+                    </div>   
+
+                    <!-- ✅ Toggle Button -->
+                    <button id="toggle-update-form">✏️ Edit Profile</button>
+
+                    <!-- ✅ Update Info Form (Initially Hidden) -->
+                    <div id="update-info-container" class="hidden">
+                        <div class="update-info">
+                            <h3>📝 Update Your Information</h3>
+                            <input type="text" id="update-fullname" placeholder="Full Name">
+                            <select id="update-gender">
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <input type="number" id="update-age" placeholder="Age">
+                            <input type="text" id="update-nationality" placeholder="Nationality">
+                            <button id="update-info-btn">Update Info</button>
+                        </div>
+                    </div>             
+                    <h2>Welcome, <span id="user-name"></span>!</h2>
+                    <p><strong>Email:</strong> <span id="user-email"></span></p>
+                    <div class="logout-container">
+                        <button id="logout-btn" class="btn btn-primary">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

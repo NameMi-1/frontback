@@ -1,0 +1,243 @@
+/* General Reset */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    background-color: #f7f7f7;
+}
+
+/* ✅ App Container (for sidebar and content) */
+.app-container {
+    display: flex;
+    height: 100vh;
+}
+
+/* ✅ Standard Sidebar Styling for All Pages */
+.sidebar {
+    background-color: #333;
+    color: white;
+    width: 250px;
+    height: 100vh;
+    padding: 20px 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    font-size: 1rem; /* ✅ Make sure font size is consistent */
+}
+
+.sidebar nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+
+.sidebar nav ul li {
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.sidebar nav ul li a {
+    text-decoration: none;
+    color: white;
+    font-size: 1rem; /* ✅ Same Font Size as Index Page */
+    font-weight: 500;
+    padding: 10px 20px;
+    display: block;
+    border-radius: 8px;
+    transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.sidebar nav ul li a:hover {
+    background-color: #3B82F6;
+    transform: translateX(5px);
+}
+
+.sidebar nav ul li a.active {
+    background-color: #60A5FA;
+    font-weight: 500;
+    transform: translateX(5px);
+}
+
+
+
+/* ✅ Sidebar Toggle for Mobile */
+.sidebar-toggle {
+    display: none;
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    background: #007BFF;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    z-index: 1000;
+}
+
+/* ✅ Mobile Responsive Sidebar */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 200px;
+    }
+
+    .sidebar-toggle {
+        display: block;
+    }
+}
+
+@media (max-width: 600px) {
+    .sidebar {
+        width: 0;
+        padding: 0;
+        transform: translateX(-100%);
+    }
+
+    .sidebar-toggle {
+        display: block;
+    }
+}
+
+
+
+.main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: calc(100% - 250px);
+    margin-left: 250px;
+    height: 100vh;
+    padding: 40px;
+    transition: margin-left 0.3s ease-in-out;
+}
+
+/* Adjust for Small Screens */
+@media (max-width: 768px) {
+    .main-content {
+        width: 100%;
+        margin-left: 0;
+    }
+}
+
+
+/* ✅ Buttons */
+button {
+    padding: 10px 20px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+button:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+/* Speech Test Container */
+.test-container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 600px; /* Wider for better layout */
+    max-width: 90%;
+}
+
+
+
+/* Title */
+.test-container h1 {
+    font-size: 26px;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* Test Sentence */
+#test-sentence {
+    font-size: 20px;
+    color: #444;
+    padding: 15px;
+    background: #eef2ff;
+    border-radius: 10px;
+    margin: 20px 0;
+}
+
+/* Buttons */
+button {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    margin: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* Results Display */
+#test-result {
+    font-size: 18px;
+    color: #333;
+    margin-top: 20px;
+}
+
+/* Progress Tracking */
+.progress-container {
+    margin-top: 20px;
+}
+
+.progress-container p {
+    font-size: 16px;
+    color: #666;
+}
+
+.progress-bar {
+    width: 100%;
+    background: #e0e0e0;
+    border-radius: 10px;
+    margin: 10px 0;
+    height: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    width: 0%;
+    background: #4CAF50;
+    border-radius: 10px;
+    transition: width 0.5s ease-in-out;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .test-container {
+        width: 90%;
+        padding: 20px;
+    }
+
+    button {
+        width: 100%;
+    }
+}
