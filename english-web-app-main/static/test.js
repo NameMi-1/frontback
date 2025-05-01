@@ -548,6 +548,23 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById("generate-btn")?.addEventListener("click", generateSentence);
             document.getElementById("start-speech-btn")?.addEventListener("click", () => startSpeechRecognition(user.uid));
         }
+    function recordAndEvaluateAccent() {
+            const sentence = document.getElementById("test-sentence").textContent;
+            navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+                const mediaRecorder = new MediaRecorder(stream);
+                const chunks = [];
+        
+                mediaRecorder.ondataavailable = event => chunks.push(event.data);
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(chunks, { type: 'audio/wav' });
+                    sendAccentScore(blob, sentence);
+                };
+        
+                mediaRecorder.start();
+                setTimeout(() => mediaRecorder.stop(), 3000);
+            });
+        }
+        
     });
 });
 
